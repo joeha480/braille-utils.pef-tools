@@ -50,7 +50,9 @@ import com.thaiopensource.validate.ValidationDriver;
  * Validates PEF-documents against the official Relax NG schema. Optionally performs additional
  * checks, see the different modes. 
  * @author Joel Håkansson
+ * @deprecated Use corresponding class in package org.daisy.dotify.api.validity in dotify.task-api instead
  */
+@Deprecated
 public class PEFValidator extends AbstractFactory implements org.daisy.braille.utils.api.validator.Validator {
 
 	/**

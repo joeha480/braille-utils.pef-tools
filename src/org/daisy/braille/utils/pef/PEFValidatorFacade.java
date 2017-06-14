@@ -28,7 +28,9 @@ import org.daisy.braille.utils.api.validator.ValidatorFactoryService;
 /**
  * Provides a facade for PEFValidator
  * @author Joel Håkansson
+ * @deprecated Use corresponding class in package org.daisy.dotify.api.validity in dotify.task-api instead
  */
+@Deprecated
 public class PEFValidatorFacade {
 	private final ValidatorFactoryService factory;
 
