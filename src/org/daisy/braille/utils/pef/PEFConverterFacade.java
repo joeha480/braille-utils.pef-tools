@@ -22,7 +22,9 @@ import java.io.FileInputStream;
 import java.io.IOException;
 import java.io.InputStream;
 import java.io.OutputStream;
+import java.util.HashMap;
 import java.util.Map;
+import java.util.Optional;
 
 import javax.xml.parsers.ParserConfigurationException;
 import javax.xml.parsers.SAXParser;
@@ -124,42 +126,38 @@ public class PEFConverterFacade {
 	 * @throws UnsupportedWidthException if an exception occurs
 	 */
 	public void parsePefFile(File input, OutputStream os, PageFormat pf, Map<String, String> settings) throws NumberFormatException, ParserConfigurationException, SAXException, IOException, EmbosserFactoryException, UnsupportedWidthException {
-		Range range = null;
-		Alignment align = Alignment.CENTER_OUTER;
-		int offset = 0;
+		Map<String, String> options = new HashMap<>(settings);
+		Range range = Optional.ofNullable(options.remove(KEY_RANGE)).map(v->Range.parseRange(v)).orElse(null);
+		Alignment align = Optional.ofNullable(options.remove(KEY_ALIGN))
+			.map(v->{
+				try {
+					return v.equalsIgnoreCase("center")?null:Alignment.valueOf(v.toUpperCase());
+				} catch (IllegalArgumentException e) {
+					System.out.println("Unknown value: " + v);
+					return null;
+				}
+			}).orElse(Alignment.CENTER_OUTER);
+		int offset = Integer.parseInt(Optional.ofNullable(options.remove(KEY_ALIGNMENT_OFFSET)).orElse("0"));
 		Embosser emb = null;
-		emb = ef.newEmbosser(settings.remove(KEY_EMBOSSER));
+		emb = ef.newEmbosser(options.remove(KEY_EMBOSSER));
 		if (emb==null) {
 			emb = ef.newEmbosser("org_daisy.GenericEmbosserProvider.EmbosserType.NONE");
 		}
 		if (pf!=null) {
 			emb.setFeature(EmbosserFeatures.PAGE_FORMAT, pf);
 		}
-		for (String key : settings.keySet()) {
-			String value = settings.get(key);
+		for (String key : options.keySet()) {
+			String value = options.get(key);
 			if (KEY_TABLE.equals(key)) {
 				emb.setFeature(EmbosserFeatures.TABLE, value);
 			} else if (KEY_BREAKS.equals(key)) {
 				emb.setFeature("breaks", value);
-			} else if (KEY_RANGE.equals(key)) {
-				range = Range.parseRange(value);
 			} else if (KEY_FALLBACK.equals(key)) {
 				emb.setFeature(EmbosserFeatures.UNSUPPORTED_CELL_FALLBACK_METHOD, value);
 			} else if (KEY_REPLACEMENT.equals(key)) {
 				emb.setFeature(EmbosserFeatures.UNSUPPORTED_CELL_REPLACEMENT, value);
 			} else if (KEY_PADDING.equals(key)) {
 				emb.setFeature("padNewline", value);
-			} else if (KEY_ALIGNMENT_OFFSET.equals(key)) {
-				offset = Integer.parseInt(value);
-			} else if (KEY_ALIGN.equals(key)) {
-				if (value.equalsIgnoreCase("center")) {
-					value = "CENTER_OUTER";
-				}
-				try {
-					align = Alignment.valueOf(value.toUpperCase());
-				} catch (IllegalArgumentException e) {
-					System.out.println("Unknown value: " + value);
-				}
 			} else if (KEY_CELL_WIDTH.equals(key)) {
 				emb.setFeature(EmbosserFeatures.CELL_WIDTH, value);
 			} else if (KEY_CELL_HEIGHT.equals(key)) {
