@@ -24,12 +24,12 @@ import java.io.InputStream;
 import java.io.OutputStream;
 import java.util.HashMap;
 import java.util.Map;
-import java.util.Optional;
 
 import javax.xml.parsers.ParserConfigurationException;
 import javax.xml.parsers.SAXParser;
 import javax.xml.parsers.SAXParserFactory;
 
+import org.daisy.braille.utils.pef.PEFHandler.Alignment;
 import org.daisy.dotify.api.embosser.EightDotFallbackMethod;
 import org.daisy.dotify.api.embosser.Embosser;
 import org.daisy.dotify.api.embosser.EmbosserCatalogService;
@@ -37,7 +37,6 @@ import org.daisy.dotify.api.embosser.EmbosserFactoryException;
 import org.daisy.dotify.api.embosser.EmbosserFeatures;
 import org.daisy.dotify.api.embosser.EmbosserWriter;
 import org.daisy.dotify.api.paper.PageFormat;
-import org.daisy.braille.utils.pef.PEFHandler.Alignment;
 import org.xml.sax.SAXException;
 
 /**
@@ -127,17 +126,9 @@ public class PEFConverterFacade {
 	 */
 	public void parsePefFile(File input, OutputStream os, PageFormat pf, Map<String, String> settings) throws NumberFormatException, ParserConfigurationException, SAXException, IOException, EmbosserFactoryException, UnsupportedWidthException {
 		Map<String, String> options = new HashMap<>(settings);
-		Range range = Optional.ofNullable(options.remove(KEY_RANGE)).map(v->Range.parseRange(v)).orElse(null);
-		Alignment align = Optional.ofNullable(options.remove(KEY_ALIGN))
-			.map(v->{
-				try {
-					return v.equalsIgnoreCase("center")?null:Alignment.valueOf(v.toUpperCase());
-				} catch (IllegalArgumentException e) {
-					System.out.println("Unknown value: " + v);
-					return null;
-				}
-			}).orElse(Alignment.CENTER_OUTER);
-		int offset = Integer.parseInt(Optional.ofNullable(options.remove(KEY_ALIGNMENT_OFFSET)).orElse("0"));
+		String align = options.remove(KEY_ALIGN);
+		String range = options.remove(KEY_RANGE);
+		String offset = options.remove(KEY_ALIGNMENT_OFFSET);
 		Embosser emb = null;
 		emb = ef.newEmbosser(options.remove(KEY_EMBOSSER));
 		if (emb==null) {

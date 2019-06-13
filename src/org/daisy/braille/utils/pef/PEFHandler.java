@@ -19,7 +19,9 @@ package org.daisy.braille.utils.pef;
 
 import java.io.IOException;
 import java.util.HashMap;
+import java.util.Optional;
 import java.util.Stack;
+import java.util.logging.Logger;
 
 import org.daisy.dotify.api.embosser.EmbosserWriter;
 import org.xml.sax.Attributes;
@@ -38,6 +40,7 @@ import org.xml.sax.helpers.DefaultHandler;
  * TODO: check height/width
  */
 public class PEFHandler extends DefaultHandler {
+	private static final Logger LOGGER = Logger.getLogger(PEFHandler.class.getCanonicalName());
 	private static final String PEF_NS="http://www.daisy.org/ns/2008/pef";
 	private static enum AlignmentFallback {LEFT, CENTER_LEFT, CENTER_RIGHT, RIGHT, ABORT};
 	/**
@@ -102,13 +105,15 @@ public class PEFHandler extends DefaultHandler {
 	 * @author Joel Håkansson
 	 */
 	public static class Builder {
+		private static final Range DEFAULT_RANGE = new Range(1);
+		private static final int DEFAULT_OFFSET = 0;
 		//required params
 		private EmbosserWriter embosser;
 		//optional params
-		private Range range = new Range(1);
+		private Range range = DEFAULT_RANGE;
 		private AlignmentFallback alignFallback = AlignmentFallback.LEFT;
 		private boolean mirrorAlign = false;
-		private int offset = 0;
+		private int offset = DEFAULT_OFFSET;
 		//**** Added by Bert Frees *****************************************
 		private int topOffset = 0;
 		//****************************************************************** 
@@ -124,6 +129,19 @@ public class PEFHandler extends DefaultHandler {
 		//init optional params here
 		/**
 		 * Sets the range of pages to output
+		 * @param value the range. If null or an empty string is passed, the range set 
+		 * 	to the default value.
+		 * @return returns this object
+		 * @throws NumberFormatException if the range cannot be parsed
+		 */
+		public Builder range(String value) {
+			return range(Optional.ofNullable(value)
+					.filter(v->!"".equals(v))
+					.map(v->Range.parseRange(v))
+					.orElse(DEFAULT_RANGE));
+		}
+		/**
+		 * Sets the range of pages to output
 		 * @param value the range
 		 * @return returns this object
 		 */
@@ -132,6 +150,26 @@ public class PEFHandler extends DefaultHandler {
 				range = value;
 			}
 			return this; 
+		}
+		
+		/**
+		 * Sets page alignment to use if the physical paper is bigger than the pages. 
+		 * @param value the value to use. Null or values not defined in
+		 * {@link Alignment} are interpreted as <code>Alignment.CENTER_OUTER</code>.
+		 * Note that this is not the same as the default value.
+		 * @return returns this object
+		 */
+		public Builder align(String value) {
+			return align(
+				Optional.ofNullable(value)
+				.map(v->{
+					try {
+						return v.equalsIgnoreCase("center")?null:Alignment.valueOf(v.toUpperCase());
+					} catch (IllegalArgumentException e) {
+						LOGGER.warning("Unknown value: " + v);
+						return null;
+					}
+				}).orElse(Alignment.CENTER_OUTER));
 		}
 		/**
 		 * Sets page alignment to use if the physical paper is bigger than the pages 
@@ -172,6 +210,19 @@ public class PEFHandler extends DefaultHandler {
 
 			}
 			return this;
+		}
+		
+		/**
+		 * Sets the page margin offset where positive numbers adjust towards
+		 * the right side of the paper, and negative numbers adjust towards the
+		 * left side.
+		 * @param value the offset. If null is passed, the offset is set to the default
+		 * value.
+		 * @return returns this object
+		 * @throws NumberFormatException if the string does not contain a parsable integer
+		 */
+		public Builder offset(String value) {
+			return offset(Optional.ofNullable(value).map(v->Integer.parseInt(v)).orElse(DEFAULT_OFFSET));
 		}
 		/**
 		 * Sets the page margin offset where positive numbers adjust towards
