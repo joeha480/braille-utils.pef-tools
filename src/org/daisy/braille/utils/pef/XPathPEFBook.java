@@ -90,7 +90,7 @@ class XPathPEFBook {
 		inputEncoding = encoding;
 
 		XPath xp = XPathFactory.newInstance().newXPath();
-		xp.setNamespaceContext(new PEFNamespaceContext());
+		xp.setNamespaceContext(PEFNamespaceContext.withDefaultPrefixes());
 
 		// Count volumes
 		tmp = 0;

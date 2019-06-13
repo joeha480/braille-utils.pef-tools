@@ -23,6 +23,8 @@ import java.util.Iterator;
 
 import javax.xml.namespace.NamespaceContext;
 
+import org.daisy.dotify.common.xml.NamespaceContextBuilder;
+
 /**
  * Provides a NamespaceContext implementation for PEF 1.0.
  * It includes namespace prefix mapping for namespaces in PEF 1.0, namely:
@@ -38,20 +40,29 @@ public class PEFNamespaceContext implements NamespaceContext {
 	private HashMap<String, String> namespaces;
 	private HashMap<String, String> prefixes;
 
+	// Note: The constructors have been deprecated because the provided NamespaceContext
+	// implementation is incomplete. The NamespaceContext methods and its inheritance on this
+	// class can be removed once the deprecated constructors are removed. The default
+	// constructor should of course not be removed, but be made private.
+	
 	/**
 	 * Creates a new PEFNamespaceContext using the prefixes
 	 * <strong>pef</strong> for <code>http://www.daisy.org/ns/2008/pef</code> and <strong>dc</strong> for
 	 * <code>http://purl.org/dc/elements/1.1/</code>
+	 * @deprecated use {@link #withDefaultPrefixes()}
 	 */
+	@Deprecated
 	public PEFNamespaceContext() {
 		this("pef", "dc");
-	}
-
+	} 
+	
 	/**
 	 * Creates a new PEFNamespaceContext using the supplied prefixes
 	 * @param pefPrefix the prefix to use for <code>http://www.daisy.org/ns/2008/pef</code>
 	 * @param dcPrefix the prefix to use for <code>http://purl.org/dc/elements/1.1/</code>
+	 * @deprecated use {@link #withPrefixes(String, String)}
 	 */
+	@Deprecated
 	public PEFNamespaceContext(String pefPrefix, String dcPrefix) {
 		namespaces = new HashMap<>();
 		prefixes = new HashMap<>();
@@ -61,7 +72,30 @@ public class PEFNamespaceContext implements NamespaceContext {
 			prefixes.put(namespaces.get(s), s);
 		}
 	}
-
+	
+	/**
+	 * Creates a new PEFNamespaceContext using the prefixes
+	 * <strong>pef</strong> for <code>http://www.daisy.org/ns/2008/pef</code> and <strong>dc</strong> for
+	 * <code>http://purl.org/dc/elements/1.1/</code>
+	 * @return a NamespaceContext
+	 */
+	public static NamespaceContext withDefaultPrefixes() {
+		return withPrefixes("pef", "dc");
+	}
+	
+	/**
+	 * Creates a new NamespaceContext for PEF using the supplied prefixes.
+	 * @param pefPrefix the prefix to use for <code>http://www.daisy.org/ns/2008/pef</code>
+	 * @param dcPrefix the prefix to use for <code>http://purl.org/dc/elements/1.1/</code>
+	 * @return a NamespaceContext
+	 */
+	public static NamespaceContext withPrefixes(String pefPrefix, String dcPrefix) {
+		return new NamespaceContextBuilder()
+				.add(pefPrefix, "http://www.daisy.org/ns/2008/pef")
+				.add(dcPrefix, "http://purl.org/dc/elements/1.1/")
+				.build();
+	}
+	
 	@Override
 	public String getNamespaceURI(String prefix) {
 		return namespaces.get(prefix);
